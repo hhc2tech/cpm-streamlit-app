@@ -38,7 +38,7 @@ def get_schedule():
             "Start Date": ["2023-04-01"]
         })
     if 'Start Date' not in df.columns:
-        df['Start Date'] = '2025-04-01'
+        df['Start Date'] = '2023-04-01'
     return df
 
 st.subheader("📝 Input Schedule Data")
