@@ -1,0 +1,9 @@
+Activity ID,Activity Name,Duration,Logic Constraints,Start Date
+T1,Thương thảo và ký hợp đồng,5,,2023-04-01
+T2,Chuẩn bị,5,T1[FS],2023-04-01
+T3,Khảo sát địa hình,45,T2[FS],2023-04-01
+T4,Khảo sát địa chất,45,T2[FS+15],2023-04-01
+T5,Thí nghiệm trong phòng,30,T4[FS],2023-04-01
+T6,Khảo sát Thủy văn và thủy lực,45,T3[FS],2023-04-01
+T7,Khảo sát bồi xói cửa sông,45,T6[FS-15],2023-04-01
+T8,Nghiên cứu bồi xói cửa sông,30,T7[FS],2023-04-01
