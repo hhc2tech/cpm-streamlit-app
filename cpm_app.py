@@ -22,9 +22,6 @@ This app allows you to:
 4. Export report to PDF.
 """)
 
-# Select timeline scale
-
-
 # Load schedule data
 def get_schedule():
     uploaded_file = st.file_uploader("📂 Upload CSV Schedule File", type=["csv"])
@@ -32,8 +29,8 @@ def get_schedule():
         if uploaded_file:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
             df = pd.read_csv(stringio, sep=None, engine='python')
-        elif os.path.exists("design_schedule0.csv"):
-            df = pd.read_csv("design_schedule0.csv", sep=None, engine='python')
+        elif os.path.exists("design_schedule.csv"):
+            df = pd.read_csv("design_schedule.csv", sep=None, engine='python')
         else:
             raise FileNotFoundError("No valid schedule file found.")
         df.columns = df.columns.str.strip()
@@ -57,8 +54,12 @@ def get_schedule():
     return df.reset_index(drop=True)
 
 st.subheader("📝 Input Schedule Data")
-data = get_schedule()
-st.dataframe(data, use_container_width=True)
+filename = st.text_input("💾 Enter filename to save CSV:", value="cpm_sample.csv")
+data = st.data_editor(data, use_container_width=True, num_rows="dynamic")
+
+if st.button("📥 Save Current Table to CSV"):
+    csv = data.to_csv(index=False).encode('utf-8')
+    st.download_button("⬇️ Click to download", csv, file_name=filename, mime='text/csv')
 
 # Build project graph
 graph = nx.DiGraph()
@@ -148,11 +149,11 @@ results = pd.DataFrame(table)
 st.subheader("📋 CPM Analysis Results")
 st.dataframe(results, use_container_width=True)
 
-# Timeline scale options under Gantt chart
-with st.expander("⚙️ Gantt Chart Time Axis Options", expanded=False):
+# Gantt chart time scale option
+with st.expander("⚙️ Gantt Chart Time Axis Options", expanded=True):
     time_scale = st.selectbox("📏 Select Time Axis Scale (in days):", options=[1, 7, 15], index=0)
-    
-# Gantt Chart (moved to function)
+
+# Gantt Chart
 fig = plot_gantt_chart(results, time_scale)
 st.pyplot(fig)
 
