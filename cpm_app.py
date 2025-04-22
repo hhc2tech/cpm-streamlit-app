@@ -25,7 +25,8 @@ def get_sample_data():
 
 # Editable table
 st.subheader("📝 Input Schedule Data")
-data = st.experimental_data_editor(get_sample_data(), num_rows="dynamic", use_container_width=True)
+#data = st.experimental_data_editor(get_sample_data(), num_rows="dynamic", use_container_width=True)
+data = st.data_editor(get_sample_data(), num_rows="dynamic", use_container_width=True)
 
 # Build DAG
 graph = nx.DiGraph()
