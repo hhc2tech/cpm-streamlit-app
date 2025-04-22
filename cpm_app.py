@@ -27,8 +27,8 @@ def get_schedule():
         if uploaded_file:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
             df = pd.read_csv(stringio, sep=None, engine='python')
-        elif os.path.exists("design_schedule0.csv"):
-            df = pd.read_csv("design_schedule0.csv", sep=None, engine='python')
+        elif os.path.exists("design_schedule.csv"):
+            df = pd.read_csv("design_schedule.csv", sep=None, engine='python')
         else:
             raise FileNotFoundError("No valid schedule file found.")
         df.columns = df.columns.str.strip()
