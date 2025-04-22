@@ -9,6 +9,7 @@ from datetime import timedelta
 from fpdf import FPDF
 import tempfile
 import os
+from io import StringIO
 
 st.set_page_config(page_title="CPM Scheduler", layout="wide")
 st.title("📊 Critical Path Method (CPM) Scheduler")
@@ -25,11 +26,22 @@ This app allows you to:
 # Sample data from uploaded or default CSV
 def get_schedule():
     uploaded_file = st.file_uploader("📂 Upload CSV Schedule File", type="csv")
-    if uploaded_file:
-        df = pd.read_csv(uploaded_file)
-    elif os.path.exists("investopedia_project_schedule.csv"):
-        df = pd.read_csv("investopedia_project_schedule.csv")
-    else:
+    try:
+        if uploaded_file:
+            stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
+            df = pd.read_csv(stringio)
+        elif os.path.exists("investopedia_project_schedule.csv"):
+            df = pd.read_csv("investopedia_project_schedule.csv")
+        else:
+            df = pd.DataFrame({
+                "Activity ID": ["A"],
+                "Activity Name": ["Sample Task"],
+                "Duration": [5],
+                "Predecessors": [""],
+                "Start Date": ["2023-04-01"]
+            })
+    except Exception as e:
+        st.error(f"❌ Error reading CSV: {e}")
         df = pd.DataFrame({
             "Activity ID": ["A"],
             "Activity Name": ["Sample Task"],
@@ -129,11 +141,13 @@ if st.button("Download PDF Report"):
     for i, row in results.iterrows():
         line = f"{row['ID']} - {row['Name']} | Dur: {row['Duration']} | ES: {row['ES']} | EF: {row['EF']} | LS: {row['LS']} | LF: {row['LF']} | Float: {row['Float']} | Critical: {row['Critical']}"
         pdf.multi_cell(0, 8, txt=line)
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
         pdf.output(tmp_file.name)
-        with open(tmp_file.name, 'rb') as f:
+        with open(tmp_file.name, "rb") as f:
             st.download_button("📄 Download PDF", data=f, file_name="CPM_Report.pdf")
 
+# Summary
 critical_path = ' ➝ '.join(results[results['Critical']]['ID'])
 st.success(f"🔺 Critical Path: {critical_path}")
 st.info(f"📅 Total Project Duration: {project_duration} days")
