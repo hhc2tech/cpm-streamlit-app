@@ -4,6 +4,10 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import networkx as nx
 from datetime import timedelta, datetime
+from fpdf import FPDF
+import tempfile
+import os
+from io import StringIO
 from constraints import parse_logic_constraints
 
 st.set_page_config(page_title="CPM Scheduler", layout="wide")
@@ -20,6 +24,7 @@ This app allows you to:
 # Select timeline scale
 time_scale = st.selectbox("📏 Select Time Axis Scale (days)", options=[1, 7, 15], index=0)
 
+# Load schedule data
 def get_schedule():
     uploaded_file = st.file_uploader("📂 Upload CSV Schedule File", type=["csv"])
     try:
@@ -54,6 +59,7 @@ st.subheader("📝 Input Schedule Data")
 data = get_schedule()
 st.dataframe(data, use_container_width=True)
 
+# Build project graph
 graph = nx.DiGraph()
 for _, row in data.iterrows():
     aid = str(row.get('Activity ID')).strip()
@@ -62,7 +68,7 @@ for _, row in data.iterrows():
     graph.add_node(aid, name=row.get('Activity Name', aid), duration=row.get('Duration', 0))
     constraints = parse_logic_constraints(row.get("Constraint", ""))
     if pd.notna(row.get('Predecessors', "")) and row['Predecessors'] != "":
-        predecessors = [x.strip() for x in str(row['Predecessors']).split(',') if x.strip()]
+        predecessors = [x.strip() for x in str(row['Predecessors']).split(',') if x.strip() != '']
         if not constraints:
             for pred in predecessors:
                 graph.add_edge(pred, aid, type='FS', lag=0)
@@ -70,16 +76,18 @@ for _, row in data.iterrows():
             for c in constraints:
                 graph.add_edge(c['predecessor'], aid, type=c['type'], lag=c['lag'])
 
+# Check for cycles before CPM calculation
 try:
     cycle_check = list(nx.find_cycle(graph, orientation='original'))
     if cycle_check:
-        st.error("⚠️ Circular dependency found. Please fix.")
+        st.error("⚠️ Your schedule has a circular dependency (logic loop). Please fix before continuing.")
         st.stop()
 except nx.NetworkXNoCycle:
     pass
 
+# CPM calculation
 es, ef = {}, {}
-if graph.nodes:
+if len(graph.nodes) > 0:
     for node in nx.topological_sort(graph):
         es[node] = 0
         for pred in graph.predecessors(node):
@@ -89,16 +97,18 @@ if graph.nodes:
             elif edge['type'] == 'SS':
                 es[node] = max(es[node], es[pred] + edge['lag'])
             elif edge['type'] == 'FF':
-                es[node] = max(es[node], ef[pred] + edge['lag'] - graph.nodes[node]['duration'])
+                ef_val = ef[pred] + edge['lag']
+                es[node] = max(es[node], ef_val - graph.nodes[node]['duration'])
             elif edge['type'] == 'SF':
-                es[node] = max(es[node], es[pred] + edge['lag'] - graph.nodes[node]['duration'])
-        ef[node] = es[node] + graph.nodes[node]['duration']
+                ef_val = es[pred] + edge['lag']
+                es[node] = max(es[node], ef_val - graph.nodes[node]['duration'])
+        ef[node] = es[node] + graph.nodes[node].get('duration', 0)
 
 lf, ls = {}, {}
-project_duration = 0
 if ef:
     end_node = max(ef, key=ef.get)
     project_duration = ef[end_node]
+
     for node in reversed(list(nx.topological_sort(graph))):
         lf[node] = project_duration
         for succ in graph.successors(node):
@@ -111,8 +121,11 @@ if ef:
                 lf[node] = min(lf[node], lf[succ] - edge['lag'])
             elif edge['type'] == 'SF':
                 lf[node] = min(lf[node], es[succ] - edge['lag'])
-        ls[node] = lf[node] - graph.nodes[node]['duration']
+        ls[node] = lf[node] - graph.nodes[node].get('duration', 0)
+else:
+    project_duration = 0
 
+# Compile analysis results
 table = []
 for _, row in data.iterrows():
     aid = str(row.get('Activity ID')).strip()
@@ -130,13 +143,31 @@ for _, row in data.iterrows():
     })
 
 results = pd.DataFrame(table)
+
 st.subheader("📋 CPM Analysis Results")
 st.dataframe(results, use_container_width=True)
 
-from cpm_graph import plot_gantt_chart
-fig = plot_gantt_chart(results, time_scale)
+# Gantt Chart
+date_locator = mdates.DayLocator(interval=time_scale)
+fig, ax = plt.subplots(figsize=(14, len(results) * 0.5))
+for i, row in results.iterrows():
+    start = row['Start']
+    duration = (row['End'] - row['Start']).days
+    color = 'red' if row['Critical'] else 'steelblue'
+    ax.barh(row['Name'], duration, left=start, height=0.5, color=color, edgecolor='black')
+
+ax.xaxis.set_major_locator(mdates.MonthLocator())
+ax.xaxis.set_minor_locator(date_locator)
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+ax.xaxis.set_minor_formatter(mdates.DateFormatter('%d'))
+ax.tick_params(axis='x', which='major', labelsize=10, pad=10)
+ax.tick_params(axis='x', which='minor', labelsize=8, rotation=90)
+ax.invert_yaxis()
+ax.grid(True, which='major', axis='x', linestyle='--')
+plt.title("Gantt Chart with Critical Path", fontsize=14)
 st.pyplot(fig)
 
+# Summary
 if not results.empty:
     critical_path = ' ➝ '.join(results[results['Critical']]['ID'])
     st.success(f"🔺 Critical Path: {critical_path}")
