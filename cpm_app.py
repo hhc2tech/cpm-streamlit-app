@@ -22,7 +22,7 @@ This app allows you to:
 """)
 
 def get_schedule():
-    uploaded_file = st.file_uploader("📂 Upload CSV Schedule File", type=["csv"]) 
+    uploaded_file = st.file_uploader("📂 Upload CSV Schedule File", type=["csv"])
     try:
         if uploaded_file:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
@@ -49,7 +49,7 @@ def get_schedule():
             "Start Date": ["01/04/2023", "01/04/2023", "06/04/2023", "21/04/2023", "05/06/2023"],
             "End Date": ["01/04/2023", "06/04/2023", "21/05/2023", "05/06/2023", "05/07/2023"]
         })
-    return df
+    return df.reset_index(drop=True)  # Ensure index is clean and T1 is included
 
 st.subheader("📝 Input Schedule Data")
 data = get_schedule()
@@ -58,18 +58,19 @@ st.dataframe(data, use_container_width=True)
 # Build graph with constraint types
 graph = nx.DiGraph()
 for _, row in data.iterrows():
-    if 'Activity ID' not in row or pd.isna(row['Activity ID']):
+    aid = str(row.get('Activity ID')).strip()
+    if not aid:
         continue
-    graph.add_node(row['Activity ID'], name=row.get('Activity Name', row['Activity ID']), duration=row.get('Duration', 0))
+    graph.add_node(aid, name=row.get('Activity Name', aid), duration=row.get('Duration', 0))
     constraints = parse_logic_constraints(row.get("Constraint", ""))
     if pd.notna(row.get('Predecessors', "")) and row['Predecessors'] != "":
-        predecessors = [x.strip() for x in str(row['Predecessors']).split(',')]
+        predecessors = [x.strip() for x in str(row['Predecessors']).split(',') if x.strip() != '']
         if not constraints:
             for pred in predecessors:
-                graph.add_edge(pred, row['Activity ID'], type='FS', lag=0)
+                graph.add_edge(pred, aid, type='FS', lag=0)
         else:
             for c in constraints:
-                graph.add_edge(c['predecessor'], row['Activity ID'], type=c['type'], lag=c['lag'])
+                graph.add_edge(c['predecessor'], aid, type=c['type'], lag=c['lag'])
 
 # Compute forward and backward passes
 es, ef = {}, {}
@@ -114,7 +115,7 @@ else:
 # Results
 table = []
 for _, row in data.iterrows():
-    aid = row.get('Activity ID')
+    aid = str(row.get('Activity ID')).strip()
     if aid not in es or aid not in ls:
         continue
     tf = ls[aid] - es[aid]
