@@ -72,38 +72,43 @@ for _, row in data.iterrows():
 
 # Compute forward and backward passes
 es, ef = {}, {}
-for node in nx.topological_sort(graph):
-    es[node] = 0
-    for pred in graph.predecessors(node):
-        edge = graph.edges[pred, node]
-        if edge['type'] == 'FS':
-            es[node] = max(es[node], ef[pred] + edge['lag'])
-        elif edge['type'] == 'SS':
-            es[node] = max(es[node], es[pred] + edge['lag'])
-        elif edge['type'] == 'FF':
-            ef_val = ef[pred] + edge['lag']
-            es[node] = max(es[node], ef_val - graph.nodes[node]['duration'])
-        elif edge['type'] == 'SF':
-            ef_val = es[pred] + edge['lag']
-            es[node] = max(es[node], ef_val - graph.nodes[node]['duration'])
-    ef[node] = es[node] + graph.nodes[node]['duration']
+if len(graph.nodes) > 0:
+    for node in nx.topological_sort(graph):
+        es[node] = 0
+        for pred in graph.predecessors(node):
+            edge = graph.edges[pred, node]
+            if edge['type'] == 'FS':
+                es[node] = max(es[node], ef[pred] + edge['lag'])
+            elif edge['type'] == 'SS':
+                es[node] = max(es[node], es[pred] + edge['lag'])
+            elif edge['type'] == 'FF':
+                ef_val = ef[pred] + edge['lag']
+                es[node] = max(es[node], ef_val - graph.nodes[node]['duration'])
+            elif edge['type'] == 'SF':
+                ef_val = es[pred] + edge['lag']
+                es[node] = max(es[node], ef_val - graph.nodes[node]['duration'])
+        ef[node] = es[node] + graph.nodes[node]['duration']
 
 lf, ls = {}, {}
-end_node = max(ef, key=ef.get)
-project_duration = ef[end_node]
-for node in reversed(list(nx.topological_sort(graph))):
-    lf[node] = project_duration
-    for succ in graph.successors(node):
-        edge = graph.edges[node, succ]
-        if edge['type'] == 'FS':
-            lf[node] = min(lf[node], ls[succ] - edge['lag'])
-        elif edge['type'] == 'SS':
-            lf[node] = min(lf[node], ls[succ] - edge['lag'])
-        elif edge['type'] == 'FF':
-            lf[node] = min(lf[node], lf[succ] - edge['lag'])
-        elif edge['type'] == 'SF':
-            lf[node] = min(lf[node], es[succ] - edge['lag'])
-    ls[node] = lf[node] - graph.nodes[node]['duration']
+if ef:
+    end_node = max(ef, key=ef.get)
+    project_duration = ef[end_node]
+
+    for node in reversed(list(nx.topological_sort(graph))):
+        lf[node] = project_duration
+        for succ in graph.successors(node):
+            edge = graph.edges[node, succ]
+            if edge['type'] == 'FS':
+                lf[node] = min(lf[node], ls[succ] - edge['lag'])
+            elif edge['type'] == 'SS':
+                lf[node] = min(lf[node], ls[succ] - edge['lag'])
+            elif edge['type'] == 'FF':
+                lf[node] = min(lf[node], lf[succ] - edge['lag'])
+            elif edge['type'] == 'SF':
+                lf[node] = min(lf[node], es[succ] - edge['lag'])
+        ls[node] = lf[node] - graph.nodes[node]['duration']
+else:
+    project_duration = 0
 
 # Results
 table = []
@@ -149,6 +154,7 @@ plt.title("Gantt Chart with Critical Path", fontsize=14)
 st.pyplot(fig)
 
 # Summary
-critical_path = ' ➝ '.join(results[results['Critical']]['ID'])
-st.success(f"🔺 Critical Path: {critical_path}")
-st.info(f"📅 Total Project Duration: {project_duration} days")
+if not results.empty:
+    critical_path = ' ➝ '.join(results[results['Critical']]['ID'])
+    st.success(f"🔺 Critical Path: {critical_path}")
+    st.info(f"📅 Total Project Duration: {project_duration} days")
