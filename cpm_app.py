@@ -30,25 +30,24 @@ def get_schedule():
         elif os.path.exists("design_schedule.csv"):
             df = pd.read_csv("design_schedule.csv", sep=';', dayfirst=True)
         else:
-            df = pd.DataFrame({
-                "Activity ID": ["A"],
-                "Activity Name": ["Sample Task"],
-                "Duration": [5],
-                "Predecessors": [""],
-                "Constraint": [""],
-                "Start Date": ["01/04/2023"],
-                "End Date": ["05/04/2023"]
-            })
+            raise FileNotFoundError("No valid schedule file found.")
+        df.columns = df.columns.str.strip()
     except Exception as e:
         st.error(f"❌ Error reading CSV: {e}")
         df = pd.DataFrame({
-            "Activity ID": ["A"],
-            "Activity Name": ["Sample Task"],
-            "Duration": [5],
-            "Predecessors": [""],
-            "Constraint": [""],
-            "Start Date": ["01/04/2023"],
-            "End Date": ["05/04/2023"]
+            "Activity ID": ["T1", "T2", "T3", "T4", "T5"],
+            "Activity Name": [
+                "Thương thảo và ký hợp đồng",
+                "chuẩn bị",
+                "Khảo sát địa hình",
+                "Khảo sát địa chất (hiện trường)",
+                "Thí nghiệm trong phòng"
+            ],
+            "Duration": [5, 5, 45, 45, 30],
+            "Predecessors": ["", "T1", "T2", "T2", "T4"],
+            "Constraint": ["", "", "", "FS+15", ""],
+            "Start Date": ["01/04/2023", "01/04/2023", "06/04/2023", "21/04/2023", "05/06/2023"],
+            "End Date": ["01/04/2023", "06/04/2023", "21/05/2023", "05/06/2023", "05/07/2023"]
         })
     return df
 
@@ -58,10 +57,12 @@ data = st.data_editor(get_schedule(), num_rows="dynamic", use_container_width=Tr
 # Build graph with constraint types
 graph = nx.DiGraph()
 for _, row in data.iterrows():
-    graph.add_node(row['Activity ID'], name=row['Activity Name'], duration=row['Duration'])
+    if 'Activity ID' not in row or pd.isna(row['Activity ID']):
+        continue
+    graph.add_node(row['Activity ID'], name=row.get('Activity Name', row['Activity ID']), duration=row.get('Duration', 0))
     constraints = parse_logic_constraints(row.get("Constraint", ""))
-    if pd.notna(row['Predecessors']) and row['Predecessors'] != "":
-        predecessors = [x.strip() for x in row['Predecessors'].split(',')]
+    if pd.notna(row.get('Predecessors', "")) and row['Predecessors'] != "":
+        predecessors = [x.strip() for x in str(row['Predecessors']).split(',')]
         if not constraints:
             for pred in predecessors:
                 graph.add_edge(pred, row['Activity ID'], type='FS', lag=0)
@@ -107,14 +108,16 @@ for node in reversed(list(nx.topological_sort(graph))):
 # Results
 table = []
 for _, row in data.iterrows():
-    aid = row['Activity ID']
+    aid = row.get('Activity ID')
+    if aid not in es or aid not in ls:
+        continue
     tf = ls[aid] - es[aid]
     table.append({
         'ID': aid,
-        'Name': row['Activity Name'],
-        'Duration': row['Duration'],
-        'Start': pd.to_datetime(row['Start Date'], dayfirst=True),
-        'End': pd.to_datetime(row['End Date'], dayfirst=True),
+        'Name': row.get('Activity Name', aid),
+        'Duration': row.get('Duration', 0),
+        'Start': pd.to_datetime(row.get('Start Date'), dayfirst=True),
+        'End': pd.to_datetime(row.get('End Date'), dayfirst=True),
         'Float': tf,
         'Critical': tf == 0
     })
