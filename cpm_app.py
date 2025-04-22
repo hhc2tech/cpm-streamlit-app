@@ -26,9 +26,9 @@ def get_schedule():
     try:
         if uploaded_file:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
-            df = pd.read_csv(stringio, sep=';', dayfirst=True)
-        elif os.path.exists("design_schedule.csv"):
-            df = pd.read_csv("design_schedule.csv", sep=';', dayfirst=True)
+            df = pd.read_csv(stringio, sep=None, engine='python')
+        elif os.path.exists("design_schedule0.csv"):
+            df = pd.read_csv("design_schedule0.csv", sep=None, engine='python')
         else:
             raise FileNotFoundError("No valid schedule file found.")
         df.columns = df.columns.str.strip()
@@ -52,7 +52,8 @@ def get_schedule():
     return df
 
 st.subheader("📝 Input Schedule Data")
-data = st.data_editor(get_schedule(), num_rows="dynamic", use_container_width=True)
+data = get_schedule()
+st.dataframe(data, use_container_width=True)
 
 # Build graph with constraint types
 graph = nx.DiGraph()
