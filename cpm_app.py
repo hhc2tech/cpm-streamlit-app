@@ -139,8 +139,8 @@ for _, row in data.iterrows():
         'ID': aid,
         'Name': row.get('Activity Name', aid),
         'Duration': row.get('Duration', 0),
-        'Start': pd.to_datetime(row.get('Start Date'), dayfirst=True),
-        'End': pd.to_datetime(row.get('End Date'), dayfirst=True),
+        'Start': pd.to_datetime(es[aid], unit='D', origin='2023-04-01') if row['Predecessors'] or row['Constraint'] else pd.to_datetime(row.get('Start Date'), dayfirst=True),
+    'End': pd.to_datetime(ef[aid], unit='D', origin='2023-04-01') if row['Predecessors'] or row['Constraint'] else pd.to_datetime(row.get('End Date'), dayfirst=True),
         'Float': tf,
         'Critical': tf == 0
     })
@@ -153,7 +153,7 @@ st.dataframe(results, use_container_width=True)
 # Gantt chart time scale and language options
 with st.expander("⚙️ Gantt Chart Display Options", expanded=True):
     language = st.selectbox("🌐 Select Language", ["English", "Tiếng Việt"], index=0)
-    time_scale = st.selectbox("📏 Select Time Axis Scale (in days):", options=[1, 7, 15], index=1)
+    time_scale = st.selectbox("📏 Select Time Axis Scale (in days):", options=[1, 7, 15], index=0)
 
 # Gantt Chart
 fig = plot_gantt_chart(results, time_scale, language)
