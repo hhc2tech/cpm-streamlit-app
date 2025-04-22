@@ -9,7 +9,7 @@ T7,Plan Marketing Strategy,30,T5,2023-04-01
 T8,Costing of Services,30,T7,2023-04-01
 T9,Initial Cash Flow Analysis - BP1,30,T8,2023-04-01
 T10,Market Research 2,30,T6,2023-04-01
-T11,Investigate Sources of Funding,180,T3,T10,2023-04-01
-T12,Detailed Cash Flow, Profit & Loss etc. – BP2,30,T9,T11,2023-04-01
-T13,Finalize Plan with Key Stake Holders,30,T12,2023-04-01
+T11,Investigate Sources of Funding,180,"T3,T10",2023-04-01
+T12,Detailed Cash Flow - BP2,30,"T9,T11",2023-04-01
+T13,Finalize Plan with Stakeholders,30,T12,2023-04-01
 T14,Apply for Funding,45,T13,2023-04-01
