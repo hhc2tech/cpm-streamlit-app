@@ -187,3 +187,4 @@ if not results.empty:
     critical_path = ' ➝ '.join(results[results['Critical']]['ID'])
     st.success(f"🔺 Critical Path: {critical_path}")
     st.info(f"📅 Total Project Duration: {project_duration} days")
+
