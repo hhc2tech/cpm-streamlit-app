@@ -29,8 +29,8 @@ def get_schedule():
         if uploaded_file:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
             df = pd.read_csv(stringio, sep=None, engine='python')
-        elif os.path.exists("design_schedule.csv"):
-            df = pd.read_csv("design_schedule.csv", sep=None, engine='python')
+        elif os.path.exists("design_schedule0.csv"):
+            df = pd.read_csv("design_schedule0.csv", sep=None, engine='python')
         else:
             raise FileNotFoundError("No valid schedule file found.")
         df.columns = df.columns.str.strip()
@@ -54,6 +54,7 @@ def get_schedule():
     return df.reset_index(drop=True)
 
 st.subheader("📝 Input Schedule Data")
+data = get_schedule()
 filename = st.text_input("💾 Enter filename to save CSV:", value="cpm_sample.csv")
 data = st.data_editor(data, use_container_width=True, num_rows="dynamic")
 
