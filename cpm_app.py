@@ -139,8 +139,8 @@ for _, row in data.iterrows():
         'ID': aid,
         'Name': row.get('Activity Name', aid),
         'Duration': row.get('Duration', 0),
-        'Start': pd.to_datetime(es[aid], unit='D', origin='2023-04-01') if row['Predecessors'] or row['Constraint'] else pd.to_datetime(row.get('Start Date'), dayfirst=True),
-    'End': pd.to_datetime(ef[aid], unit='D', origin='2023-04-01') if row['Predecessors'] or row['Constraint'] else pd.to_datetime(row.get('End Date'), dayfirst=True),
+        'Start': pd.to_datetime(es[aid], unit='D', origin='2023-04-01') if ((pd.notna(row['Predecessors']) and row['Predecessors'].strip() != "") or (pd.notna(row['Constraint']) and row['Constraint'].strip() != "")) else pd.to_datetime(row.get('Start Date'), dayfirst=True),
+    'End': pd.to_datetime(ef[aid], unit='D', origin='2023-04-01') if ((pd.notna(row['Predecessors']) and row['Predecessors'].strip() != "") or (pd.notna(row['Constraint']) and row['Constraint'].strip() != "")) else pd.to_datetime(row.get('End Date'), dayfirst=True),
         'Float': tf,
         'Critical': tf == 0
     })
@@ -158,6 +158,14 @@ with st.expander("⚙️ Gantt Chart Display Options", expanded=True):
 # Gantt Chart
 fig = plot_gantt_chart(results, time_scale, language)
 st.pyplot(fig)
+
+# Export to PDF
+if st.button("📄 Export Gantt Chart to PDF"):
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+        pdf_path = tmp_file.name
+        fig.savefig(pdf_path, format="pdf")
+        with open(pdf_path, "rb") as f:
+            st.download_button("⬇️ Download Gantt PDF", f.read(), file_name="gantt_chart.pdf", mime="application/pdf")
 
 # Summary
 if not results.empty:
