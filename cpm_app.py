@@ -56,11 +56,15 @@ def get_schedule():
 st.subheader("\U0001F4DD Input Schedule Data")
 data = get_schedule()
 filename = st.text_input("\U0001F4BE Enter filename to save CSV:", value="cpm_sample.csv")
+
+st.markdown("**Select CPM Calculation Method:**")
+method = st.radio("Use Start/End Dates or calculate by CPM logic:", ["Use CSV Start/End Dates", "Calculate by CPM Logic"])
+
 data = st.data_editor(data, use_container_width=True, num_rows="dynamic")
 
 if st.button("\U0001F4E5 Save Current Table to CSV"):
     csv = data.to_csv(index=False).encode('utf-8')
-    st.download_button("⬇️ Click to download", csv, file_name=filename, mime='text/csv')
+    st.download_button("⬇️ Click to download", csv, file_name=filename, mime="text/csv")
 
 # Build project graph
 graph = nx.DiGraph()
@@ -140,8 +144,9 @@ else:
     project_duration = 0
 
 # Compile analysis results
+results = []
 start_origin = pd.to_datetime(data.loc[data['Predecessors'] == "", 'Start Date'].min(), dayfirst=True)
-table = []
+
 for _, row in data.iterrows():
     aid = str(row.get('Activity ID')).strip()
     if aid not in es or aid not in ls:
@@ -149,10 +154,14 @@ for _, row in data.iterrows():
     tf = ls[aid] - es[aid]
     duration = graph.nodes[aid].get('duration', 0)
 
-    start_date = start_origin + pd.to_timedelta(es[aid], unit='D')
-    end_date = start_origin + pd.to_timedelta(ef[aid], unit='D')
+    if method == "Use CSV Start/End Dates" and pd.notna(row.get('Start Date')) and pd.notna(row.get('End Date')):
+        start_date = pd.to_datetime(row['Start Date'], dayfirst=True)
+        end_date = pd.to_datetime(row['End Date'], dayfirst=True)
+    else:
+        start_date = start_origin + pd.to_timedelta(es[aid], unit='D')
+        end_date = start_origin + pd.to_timedelta(ef[aid], unit='D')
 
-    table.append({
+    results.append({
         'ID': aid,
         'Name': row.get('Activity Name', aid),
         'Duration': duration,
@@ -162,7 +171,7 @@ for _, row in data.iterrows():
         'Critical': tf == 0
     })
 
-results = pd.DataFrame(table)
+results = pd.DataFrame(results)
 
 st.subheader("\U0001F4CB CPM Analysis Results")
 st.dataframe(results, use_container_width=True)
