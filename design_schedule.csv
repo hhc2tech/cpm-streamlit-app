@@ -1,9 +1,22 @@
-Activity ID,Activity Name,Duration,Logic Constraints,Start Date
-T1,Thương thảo và ký hợp đồng,5,,2023-04-01
-T2,Chuẩn bị,5,T1[FS],2023-04-01
-T3,Khảo sát địa hình,45,T2[FS],2023-04-01
-T4,Khảo sát địa chất,45,T2[FS+15],2023-04-01
-T5,Thí nghiệm trong phòng,30,T4[FS],2023-04-01
-T6,Khảo sát Thủy văn và thủy lực,45,T3[FS],2023-04-01
-T7,Khảo sát bồi xói cửa sông,45,T6[FS-15],2023-04-01
-T8,Nghiên cứu bồi xói cửa sông,30,T7[FS],2023-04-01
+Activity ID;Activity Name;Duration;Predecessors;Constraint;Start Date;End Date
+T1;Thương thảo và ký hợp đồng;5;;;01/04/2023;01/04/2023
+T2;chuẩn bị;5;T1;;01/04/2023;06/04/2023
+T3;Khảo sát địa hình;45;T2;;06/04/2023;21/05/2023
+T4;Khảo sát địa chất (hiện trường);45;T2;FS+15;21/04/2023;05/06/2023
+T5;Thí nghiệm trong phòng;30;T4;;05/06/2023;05/07/2023
+T6;Khảo sát Thủy văn và thủy lực;45;T3;;21/05/2023;05/07/2023
+T7;Khảo sát bồi xói cửa sông;45;T6;FS-15;20/06/2023;04/08/2023
+T8;Nghiên cứu bồi xói cửa sông;30;T7;;04/08/2023;03/09/2023
+T9;Điều tra dân sinh và Kinh tế- xã hội;45;T4;;05/06/2023;20/07/2023
+T10;Lập dự án đầu tư;75;T6;;05/07/2023;18/09/2023
+T11;Lập thiết kế cơ sở;60;T6;SS+10;15/07/2023;13/09/2023
+T12;Báo cáo khởi đầu;1;T11;;13/09/2023;14/09/2023
+T13;Báo cáo giữa kỳ;1;T10;FS-3;19/08/2023;20/08/2023
+T14;Báo cáo cuối kỳ;1;T16;FS+10;28/09/2023;29/09/2023
+T15;Thỏa thuận với giao thông;10;T11;FS+3;16/09/2023;26/09/2023
+T16;Nộp hồ sơ Dự án đầu tư;1;T14;FS+10;09/10/2023;10/10/2023
+T17;Xem xét của Chủ đầu tư;15;T16;FS+1;11/10/2023;26/10/2023
+T18;Chỉnh sửa của Tư vấn;5;T17;;26/10/2023;31/10/2023
+T19;Đánh giá tác động môi trường;45;T10;FS+20;25/07/2023;08/09/2023
+T20;Xem xét và phê duyệt DTM;15;T19;;23/09/2023;08/10/2023
+T21;Thẩm định và Phê duyệt;15;T18;FS+10;10/11/2023;25/11/2023
