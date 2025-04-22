@@ -12,7 +12,7 @@ from constraints import parse_logic_constraints
 from cpm_graph import plot_gantt_chart
 
 st.set_page_config(page_title="CPM Scheduler", layout="wide")
-st.title("📊 CPM Scheduler with Advanced Constraints")
+st.title("\U0001F4CA CPM Scheduler with Advanced Constraints")
 
 st.markdown("""
 This app allows you to:
@@ -24,7 +24,7 @@ This app allows you to:
 
 # Load schedule data
 def get_schedule():
-    uploaded_file = st.file_uploader("📂 Upload CSV Schedule File", type=["csv"])
+    uploaded_file = st.file_uploader("\U0001F4C2 Upload CSV Schedule File", type=["csv"])
     try:
         if uploaded_file:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
@@ -53,12 +53,12 @@ def get_schedule():
         })
     return df.reset_index(drop=True)
 
-st.subheader("📝 Input Schedule Data")
+st.subheader("\U0001F4DD Input Schedule Data")
 data = get_schedule()
-filename = st.text_input("💾 Enter filename to save CSV:", value="cpm_sample.csv")
+filename = st.text_input("\U0001F4BE Enter filename to save CSV:", value="cpm_sample.csv")
 data = st.data_editor(data, use_container_width=True, num_rows="dynamic")
 
-if st.button("📥 Save Current Table to CSV"):
+if st.button("\U0001F4E5 Save Current Table to CSV"):
     csv = data.to_csv(index=False).encode('utf-8')
     st.download_button("⬇️ Click to download", csv, file_name=filename, mime='text/csv')
 
@@ -93,19 +93,27 @@ es, ef = {}, {}
 if len(graph.nodes) > 0:
     for node in nx.topological_sort(graph):
         es[node] = 0
+        duration = graph.nodes[node].get('duration', 0)
+
         for pred in graph.predecessors(node):
             edge = graph.edges[pred, node]
+            pred_es = es.get(pred, 0)
+            pred_ef = ef.get(pred, 0)
+
             if edge['type'] == 'FS':
-                es[node] = max(es[node], ef[pred] + edge['lag'])
+                es[node] = max(es[node], pred_ef + edge['lag'])
             elif edge['type'] == 'SS':
-                es[node] = max(es[node], es[pred] + edge['lag'])
+                es[node] = max(es[node], pred_es + edge['lag'])
             elif edge['type'] == 'FF':
-                ef_val = ef[pred] + edge['lag']
-                es[node] = max(es[node], ef_val - graph.nodes[node].get('duration', 0))
+                ef_candidate = pred_ef + edge['lag']
+                es_candidate = ef_candidate - duration
+                es[node] = max(es[node], es_candidate)
             elif edge['type'] == 'SF':
-                ef_val = es[pred] + edge['lag']
-                es[node] = max(es[node], ef_val - graph.nodes[node].get('duration', 0))
-        ef[node] = es[node] + graph.nodes[node].get('duration', 0)
+                ef_candidate = pred_es + edge['lag']
+                es_candidate = ef_candidate - duration
+                es[node] = max(es[node], es_candidate)
+
+        ef[node] = es[node] + duration
 
 lf, ls = {}, {}
 if ef:
@@ -114,6 +122,8 @@ if ef:
 
     for node in reversed(list(nx.topological_sort(graph))):
         lf[node] = project_duration
+        duration = graph.nodes[node].get('duration', 0)
+
         for succ in graph.successors(node):
             edge = graph.edges[node, succ]
             if edge['type'] == 'FS':
@@ -124,30 +134,35 @@ if ef:
                 lf[node] = min(lf[node], lf[succ] - edge['lag'])
             elif edge['type'] == 'SF':
                 lf[node] = min(lf[node], es[succ] - edge['lag'])
-        ls[node] = lf[node] - graph.nodes[node].get('duration', 0)
+
+        ls[node] = lf[node] - duration
 else:
     project_duration = 0
 
 # Compile analysis results
+base_date = pd.to_datetime(data['Start Date'].min(), dayfirst=True)
 table = []
 for _, row in data.iterrows():
     aid = str(row.get('Activity ID')).strip()
     if aid not in es or aid not in ls:
         continue
     tf = ls[aid] - es[aid]
+    duration = graph.nodes[aid].get('duration', 0)
+    start_date = base_date + pd.to_timedelta(es[aid], unit='D')
+    end_date = base_date + pd.to_timedelta(ef[aid], unit='D')
     table.append({
         'ID': aid,
         'Name': row.get('Activity Name', aid),
-        'Duration': row.get('Duration', 0),
-        'Start': pd.to_datetime(data['Start Date'].min(), dayfirst=True) + pd.to_timedelta(es[aid], unit='D'),
-    'End': pd.to_datetime(data['Start Date'].min(), dayfirst=True) + pd.to_timedelta(ef[aid], unit='D'),
+        'Duration': duration,
+        'Start': start_date,
+        'End': end_date,
         'Float': tf,
         'Critical': tf == 0
     })
 
 results = pd.DataFrame(table)
 
-st.subheader("📋 CPM Analysis Results")
+st.subheader("\U0001F4CB CPM Analysis Results")
 st.dataframe(results, use_container_width=True)
 
 # Gantt chart time scale and language options
@@ -160,7 +175,7 @@ fig = plot_gantt_chart(results, time_scale, language)
 st.pyplot(fig)
 
 # Export to PDF
-if st.button("📄 Export Gantt Chart to PDF"):
+if st.button("\U0001F4C4 Export Gantt Chart to PDF"):
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
         pdf_path = tmp_file.name
         fig.savefig(pdf_path, format="pdf")
