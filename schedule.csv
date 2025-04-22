@@ -1,0 +1,6 @@
+Activity ID,Activity Name,Duration,Predecessors
+A,Excavation,5,
+B,Foundation,3,A
+C,Framing,4,B
+D,Electrical,2,B
+E,Roofing,3,C,D
