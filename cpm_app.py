@@ -129,13 +129,11 @@ if st.button("Download PDF Report"):
     for i, row in results.iterrows():
         line = f"{row['ID']} - {row['Name']} | Dur: {row['Duration']} | ES: {row['ES']} | EF: {row['EF']} | LS: {row['LS']} | LF: {row['LF']} | Float: {row['Float']} | Critical: {row['Critical']}"
         pdf.multi_cell(0, 8, txt=line)
-
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
         pdf.output(tmp_file.name)
-        with open(tmp_file.name, "rb") as f:
+        with open(tmp_file.name, 'rb') as f:
             st.download_button("📄 Download PDF", data=f, file_name="CPM_Report.pdf")
 
-# Summary
 critical_path = ' ➝ '.join(results[results['Critical']]['ID'])
 st.success(f"🔺 Critical Path: {critical_path}")
 st.info(f"📅 Total Project Duration: {project_duration} days")
