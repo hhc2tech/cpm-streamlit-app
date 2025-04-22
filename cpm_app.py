@@ -150,12 +150,13 @@ results = pd.DataFrame(table)
 st.subheader("📋 CPM Analysis Results")
 st.dataframe(results, use_container_width=True)
 
-# Gantt chart time scale option
-with st.expander("⚙️ Gantt Chart Time Axis Options", expanded=True):
+# Gantt chart time scale and language options
+with st.expander("⚙️ Gantt Chart Display Options", expanded=True):
+    language = st.selectbox("🌐 Select Language", ["English", "Tiếng Việt"], index=0)
     time_scale = st.selectbox("📏 Select Time Axis Scale (in days):", options=[1, 7, 15], index=0)
 
 # Gantt Chart
-fig = plot_gantt_chart(results, time_scale)
+fig = plot_gantt_chart(results, time_scale, language)
 st.pyplot(fig)
 
 # Summary
