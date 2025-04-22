@@ -23,8 +23,7 @@ This app allows you to:
 """)
 
 # Select timeline scale
-with st.expander("⚙️ Gantt Chart Options"):
-    time_scale = st.selectbox("📏 Select Time Axis Scale (in days):", options=[1, 7, 15], index=0)
+
 
 # Load schedule data
 def get_schedule():
@@ -152,6 +151,10 @@ st.dataframe(results, use_container_width=True)
 # Gantt Chart (moved to function)
 fig = plot_gantt_chart(results, time_scale)
 st.pyplot(fig)
+
+# Timeline scale options under Gantt chart
+with st.expander("⚙️ Gantt Chart Time Axis Options", expanded=False):
+    time_scale = st.selectbox("📏 Select Time Axis Scale (in days):", options=[1, 7, 15], index=0)
 
 # Summary
 if not results.empty:
