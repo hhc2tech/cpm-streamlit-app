@@ -1,5 +1,5 @@
+#refer: https://www.investopedia.com/terms/g/gantt-chart.asp
 # data = st.data_editor(get_sample_data(), num_rows="dynamic", use_container_width=True)   row 28
-
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -17,14 +17,10 @@ This app allows you to:
 3. Visualize the schedule and critical path using a classic Gantt chart.
 """)
 
-# Sample data
+# Sample data from CSV
+@st.cache_data
 def get_sample_data():
-    return pd.DataFrame({
-        'Activity ID': ['A', 'B', 'C', 'D', 'E'],
-        'Activity Name': ['Excavation', 'Foundation', 'Framing', 'Electrical', 'Roofing'],
-        'Duration': [5, 3, 4, 2, 3],
-        'Predecessors': ['', 'A', 'B', 'B', 'C,D']
-    })
+    return pd.read_csv("investopedia_project_schedule.csv")
 
 st.subheader("📝 Input Schedule Data")
 data = st.data_editor(get_sample_data(), num_rows="dynamic", use_container_width=True)
@@ -33,7 +29,7 @@ data = st.data_editor(get_sample_data(), num_rows="dynamic", use_container_width
 graph = nx.DiGraph()
 for _, row in data.iterrows():
     graph.add_node(row['Activity ID'], name=row['Activity Name'], duration=row['Duration'])
-    if pd.notna(row['Predecessors']) and row['Predecessors'] != '':
+    if pd.notna(row['Predecessors']) and row['Predecessors'].strip() != '':
         preds = [p.strip() for p in str(row['Predecessors']).split(',')]
         for pred in preds:
             graph.add_edge(pred, row['Activity ID'])
@@ -75,8 +71,8 @@ st.dataframe(results, use_container_width=True)
 
 # Classic Gantt Chart (matplotlib)
 st.subheader("📈 Gantt Chart")
-fig, ax = plt.subplots(figsize=(12, 6))
-start_date = pd.to_datetime("2023-01-01")
+fig, ax = plt.subplots(figsize=(14, 8))
+start_date = pd.to_datetime("2023-04-01")
 
 for i, row in results.iterrows():
     start = start_date + timedelta(days=row['ES'])
@@ -86,7 +82,11 @@ for i, row in results.iterrows():
     ax.text(start + timedelta(days=0.1), i, row['ID'], va='center', ha='left', color='white', fontsize=8)
 
 ax.xaxis.set_major_locator(mdates.MonthLocator())
+ax.xaxis.set_minor_locator(mdates.DayLocator(bymonthday=[1, 15]))
 ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+ax.xaxis.set_minor_formatter(mdates.DateFormatter('%d'))
+ax.tick_params(axis='x', which='major', labelsize=10, pad=10)
+ax.tick_params(axis='x', which='minor', labelsize=8, rotation=90)
 ax.invert_yaxis()
 ax.grid(True, which='major', axis='x', linestyle='--')
 plt.title("Gantt Chart with Critical Path", fontsize=14)
