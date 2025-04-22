@@ -140,7 +140,7 @@ else:
     project_duration = 0
 
 # Compile analysis results
-base_date = pd.to_datetime(data['Start Date'].min(), dayfirst=True)
+start_origin = pd.to_datetime(data.loc[data['Predecessors'] == "", 'Start Date'].min(), dayfirst=True)
 table = []
 for _, row in data.iterrows():
     aid = str(row.get('Activity ID')).strip()
@@ -148,8 +148,10 @@ for _, row in data.iterrows():
         continue
     tf = ls[aid] - es[aid]
     duration = graph.nodes[aid].get('duration', 0)
-    start_date = base_date + pd.to_timedelta(es[aid], unit='D')
-    end_date = base_date + pd.to_timedelta(ef[aid], unit='D')
+
+    start_date = start_origin + pd.to_timedelta(es[aid], unit='D')
+    end_date = start_origin + pd.to_timedelta(ef[aid], unit='D')
+
     table.append({
         'ID': aid,
         'Name': row.get('Activity Name', aid),
@@ -187,4 +189,3 @@ if not results.empty:
     critical_path = ' ➝ '.join(results[results['Critical']]['ID'])
     st.success(f"🔺 Critical Path: {critical_path}")
     st.info(f"📅 Total Project Duration: {project_duration} days")
-
