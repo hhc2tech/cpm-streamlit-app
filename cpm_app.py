@@ -140,13 +140,15 @@ for _, row in data.iterrows():
         'Name': row.get('Activity Name', aid),
         'Duration': row.get('Duration', 0),
         'Start': (
-        pd.to_datetime(data.loc[data['Activity ID'] == aid, 'Start Date'].values[0], dayfirst=True)
-        + pd.to_timedelta(es[aid], unit='D')
-    ) if ((pd.notna(row['Predecessors']) and row['Predecessors'].strip() != "") or (pd.notna(row['Constraint']) and row['Constraint'].strip() != "")) else pd.to_datetime(row.get('Start Date'), dayfirst=True),
+        pd.to_datetime(row.get('Start Date'), dayfirst=True)
+        if ((pd.notna(row['Predecessors']) and row['Predecessors'].strip() == "") and (pd.isna(row['Constraint']) or row['Constraint'].strip() == ""))
+        else pd.to_datetime(data.loc[data['Activity ID'] == aid, 'Start Date'].values[0], dayfirst=True) + pd.to_timedelta(es[aid], unit='D')
+    ),
     'End': (
-        pd.to_datetime(data.loc[data['Activity ID'] == aid, 'Start Date'].values[0], dayfirst=True)
-        + pd.to_timedelta(ef[aid], unit='D')
-    ) if ((pd.notna(row['Predecessors']) and row['Predecessors'].strip() != "") or (pd.notna(row['Constraint']) and row['Constraint'].strip() != "")) else pd.to_datetime(row.get('Start Date'), dayfirst=True) + pd.to_timedelta(row.get('Duration', 0), unit='D'),
+        pd.to_datetime(row.get('Start Date'), dayfirst=True) + pd.to_timedelta(row.get('Duration', 0), unit='D')
+        if ((pd.notna(row['Predecessors']) and row['Predecessors'].strip() == "") and (pd.isna(row['Constraint']) or row['Constraint'].strip() == ""))
+        else pd.to_datetime(data.loc[data['Activity ID'] == aid, 'Start Date'].values[0], dayfirst=True) + pd.to_timedelta(ef[aid], unit='D')
+    ),,
         'Float': tf,
         'Critical': tf == 0
     })
