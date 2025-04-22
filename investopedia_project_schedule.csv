@@ -1,0 +1,15 @@
+Activity ID,Activity Name,Duration,Predecessors,Start Date
+T1,Vision & Strategy,30,,2023-04-01
+T2,Company Incorporation & Initial Funding,30,T1,2023-04-01
+T3,Consider LIMA's IP,15,T2,2023-04-01
+T4,Market Research 1,45,T2,2023-04-01
+T5,Initial Marketing up to ALCAS open day,90,T4,2023-04-01
+T6,2nd Stage Marketing including LVMC,75,T5,2023-04-01
+T7,Plan Marketing Strategy,30,T5,2023-04-01
+T8,Costing of Services,30,T7,2023-04-01
+T9,Initial Cash Flow Analysis - BP1,30,T8,2023-04-01
+T10,Market Research 2,30,T6,2023-04-01
+T11,Investigate Sources of Funding,180,T3,T10,2023-04-01
+T12,Detailed Cash Flow, Profit & Loss etc. – BP2,30,T9,T11,2023-04-01
+T13,Finalize Plan with Key Stake Holders,30,T12,2023-04-01
+T14,Apply for Funding,45,T13,2023-04-01
