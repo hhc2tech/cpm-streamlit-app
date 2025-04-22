@@ -1,18 +1,13 @@
-import pandas as pd
-import re
 
-def parse_logic_constraints(constraints_str):
-    if pd.isna(constraints_str) or constraints_str.strip() == "":
-        return []
-    relations = []
-    parts = constraints_str.split(';')
-    for part in parts:
-        match = re.match(r'([A-Za-z0-9_]+)\[(FS|SS|FF|SF)([+-]\d+)?\]', part.strip())
-        if match:
-            pred, relation, lag = match.groups()
-            relations.append({
-                'predecessor': pred,
-                'type': relation,
-                'lag': int(lag) if lag else 0
-            })
-    return relations
+def parse_logic_constraints(constraint_str):
+    constraints = []
+    if constraint_str:
+        items = [s.strip() for s in constraint_str.split(',') if s.strip()]
+        for item in items:
+            if len(item) >= 4:
+                constraints.append({
+                    'predecessor': item[:2].strip(),
+                    'type': item[2:4].strip(),
+                    'lag': int(item[4:].strip()) if len(item) > 4 else 0
+                })
+    return constraints
