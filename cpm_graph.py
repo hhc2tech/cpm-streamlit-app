@@ -38,8 +38,8 @@ def plot_gantt_chart(results, time_scale=7, language="English"):
     ax.xaxis.set_minor_formatter(minor_fmt)
 
 
-    ax.tick_params(axis='x', which='major', labelsize=10, pad=10)
-    ax.tick_params(axis='x', which='minor', labelsize=8, rotation=90, pad=25)
+    ax.tick_params(axis='x', which='major', labelsize=10, pad=25)
+    ax.tick_params(axis='x', which='minor', labelsize=8, rotation=90, pad=5)
     ax.invert_yaxis()
     ax.grid(True, which='major', axis='x', linestyle='--')
     
