@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import networkx as nx
 from datetime import timedelta
+from fpdf import FPDF
+import tempfile
 
 st.set_page_config(page_title="CPM Scheduler", layout="wide")
 st.title("📊 Critical Path Method (CPM) Scheduler")
@@ -15,12 +17,17 @@ This app allows you to:
 1. Upload or edit your project schedule.
 2. Automatically compute Critical Path using CPM.
 3. Visualize the schedule and critical path using a classic Gantt chart.
+4. Export the analysis to PDF.
+5. View the Network Diagram.
 """)
 
 # Sample data from CSV
 @st.cache_data
 def get_sample_data():
-    return pd.read_csv("investopedia_project_schedule.csv")
+    df = pd.read_csv("investopedia_project_schedule.csv")
+    if 'Start Date' not in df.columns:
+        df['Start Date'] = '2023-04-01'
+    return df
 
 st.subheader("📝 Input Schedule Data")
 data = st.data_editor(get_sample_data(), num_rows="dynamic", use_container_width=True)
@@ -69,7 +76,7 @@ results = pd.DataFrame(table).sort_values(by='ES')
 st.subheader("📋 CPM Analysis Results")
 st.dataframe(results, use_container_width=True)
 
-# Classic Gantt Chart (matplotlib)
+# Gantt Chart
 st.subheader("📈 Gantt Chart")
 fig, ax = plt.subplots(figsize=(14, 8))
 start_date = pd.to_datetime("2023-04-01")
@@ -91,6 +98,33 @@ ax.invert_yaxis()
 ax.grid(True, which='major', axis='x', linestyle='--')
 plt.title("Gantt Chart with Critical Path", fontsize=14)
 st.pyplot(fig)
+
+# Network Diagram
+st.subheader("📌 Network Diagram")
+fig2, ax2 = plt.subplots(figsize=(14, 8))
+pos = nx.spring_layout(graph, seed=42)
+nx.draw(graph, pos, with_labels=True, node_color='skyblue', node_size=2000, font_size=10, font_weight='bold', ax=ax2)
+labels = nx.get_edge_attributes(graph, 'label')
+nx.draw_networkx_edge_labels(graph, pos, edge_labels=labels, ax=ax2)
+st.pyplot(fig2)
+
+# PDF Export
+st.subheader("📤 Export Report")
+if st.button("Download PDF Report"):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_font("Arial", size=12)
+    pdf.cell(200, 10, txt="Critical Path Method Analysis Report", ln=True, align="C")
+    pdf.ln(10)
+    pdf.set_font("Arial", size=10)
+    for i, row in results.iterrows():
+        line = f"{row['ID']} - {row['Name']} | Dur: {row['Duration']} | ES: {row['ES']} | EF: {row['EF']} | LS: {row['LS']} | LF: {row['LF']} | Float: {row['Float']} | Critical: {row['Critical']}"
+        pdf.multi_cell(0, 8, txt=line)
+
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+        pdf.output(tmp_file.name)
+        with open(tmp_file.name, "rb") as f:
+            st.download_button("📄 Download PDF", data=f, file_name="CPM_Report.pdf")
 
 # Summary
 critical_path = ' ➝ '.join(results[results['Critical']]['ID'])
