@@ -148,13 +148,13 @@ results = pd.DataFrame(table)
 st.subheader("📋 CPM Analysis Results")
 st.dataframe(results, use_container_width=True)
 
-# Gantt Chart (moved to function)
-fig = plot_gantt_chart(results, time_scale)
-st.pyplot(fig)
-
 # Timeline scale options under Gantt chart
 with st.expander("⚙️ Gantt Chart Time Axis Options", expanded=False):
     time_scale = st.selectbox("📏 Select Time Axis Scale (in days):", options=[1, 7, 15], index=0)
+    
+# Gantt Chart (moved to function)
+fig = plot_gantt_chart(results, time_scale)
+st.pyplot(fig)
 
 # Summary
 if not results.empty:
