@@ -9,6 +9,7 @@ import tempfile
 import os
 from io import StringIO
 from constraints import parse_logic_constraints
+from cpm_graph import plot_gantt_chart
 
 st.set_page_config(page_title="CPM Scheduler", layout="wide")
 st.title("📊 CPM Scheduler with Advanced Constraints")
@@ -31,8 +32,8 @@ def get_schedule():
         if uploaded_file:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
             df = pd.read_csv(stringio, sep=None, engine='python')
-        elif os.path.exists("design_schedule.csv"):
-            df = pd.read_csv("design_schedule.csv", sep=None, engine='python')
+        elif os.path.exists("design_schedule0.csv"):
+            df = pd.read_csv("design_schedule0.csv", sep=None, engine='python')
         else:
             raise FileNotFoundError("No valid schedule file found.")
         df.columns = df.columns.str.strip()
@@ -50,8 +51,8 @@ def get_schedule():
             "Duration": [5, 5, 45, 45, 30],
             "Predecessors": ["", "T1", "T2", "T2", "T4"],
             "Constraint": ["", "", "", "FS+15", ""],
-            "Start Date": ["01/04/2023", "01/04/2023", "06/04/2023", "21/04/2023", "05/06/2023"],
-            "End Date": ["06/04/2023", "06/04/2023", "21/05/2023", "05/06/2023", "05/07/2023"]
+            "Start Date": ["01/04/2023", "06/04/2023", "11/04/2023", "26/04/2023", "10/06/2023"],
+            "End Date": ["06/04/2023", "11/04/2023", "26/05/2023", "10/06/2023", "10/07/2023"]
         })
     return df.reset_index(drop=True)
 
@@ -66,7 +67,7 @@ for _, row in data.iterrows():
     if not aid:
         continue
     graph.add_node(aid, name=row.get('Activity Name', aid), duration=row.get('Duration', 0))
-    constraints = parse_logic_constraints(row.get("Constraint", ""))
+    constraints = parse_logic_constraints(str(row.get("Constraint", "") or ""))
     if pd.notna(row.get('Predecessors', "")) and row['Predecessors'] != "":
         predecessors = [x.strip() for x in str(row['Predecessors']).split(',') if x.strip() != '']
         if not constraints:
@@ -98,10 +99,10 @@ if len(graph.nodes) > 0:
                 es[node] = max(es[node], es[pred] + edge['lag'])
             elif edge['type'] == 'FF':
                 ef_val = ef[pred] + edge['lag']
-                es[node] = max(es[node], ef_val - graph.nodes[node]['duration'])
+                es[node] = max(es[node], ef_val - graph.nodes[node].get('duration', 0))
             elif edge['type'] == 'SF':
                 ef_val = es[pred] + edge['lag']
-                es[node] = max(es[node], ef_val - graph.nodes[node]['duration'])
+                es[node] = max(es[node], ef_val - graph.nodes[node].get('duration', 0))
         ef[node] = es[node] + graph.nodes[node].get('duration', 0)
 
 lf, ls = {}, {}
@@ -147,24 +148,8 @@ results = pd.DataFrame(table)
 st.subheader("📋 CPM Analysis Results")
 st.dataframe(results, use_container_width=True)
 
-# Gantt Chart
-date_locator = mdates.DayLocator(interval=time_scale)
-fig, ax = plt.subplots(figsize=(14, len(results) * 0.5))
-for i, row in results.iterrows():
-    start = row['Start']
-    duration = (row['End'] - row['Start']).days
-    color = 'red' if row['Critical'] else 'steelblue'
-    ax.barh(row['Name'], duration, left=start, height=0.5, color=color, edgecolor='black')
-
-ax.xaxis.set_major_locator(mdates.MonthLocator())
-ax.xaxis.set_minor_locator(date_locator)
-ax.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-ax.xaxis.set_minor_formatter(mdates.DateFormatter('%d'))
-ax.tick_params(axis='x', which='major', labelsize=10, pad=10)
-ax.tick_params(axis='x', which='minor', labelsize=8, rotation=90)
-ax.invert_yaxis()
-ax.grid(True, which='major', axis='x', linestyle='--')
-plt.title("Gantt Chart with Critical Path", fontsize=14)
+# Gantt Chart (moved to function)
+fig = plot_gantt_chart(results, time_scale)
 st.pyplot(fig)
 
 # Summary
