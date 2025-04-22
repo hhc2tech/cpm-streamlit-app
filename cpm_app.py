@@ -27,8 +27,8 @@ def get_schedule():
         if uploaded_file:
             stringio = StringIO(uploaded_file.getvalue().decode("utf-8"))
             df = pd.read_csv(stringio, sep=';', dayfirst=True)
-        elif os.path.exists("design_schedule_updated.csv"):
-            df = pd.read_csv("design_schedule_updated.csv", sep=';', dayfirst=True)
+        elif os.path.exists("design_schedule.csv"):
+            df = pd.read_csv("design_schedule.csv", sep=';', dayfirst=True)
         else:
             df = pd.DataFrame({
                 "Activity ID": ["A"],
