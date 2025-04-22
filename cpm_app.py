@@ -156,7 +156,7 @@ with st.expander("⚙️ Gantt Chart Display Options", expanded=True):
     time_scale = st.selectbox("📏 Select Time Axis Scale (in days):", options=[1, 7, 15], index=0)
 
 # Gantt Chart
-fig = plot_gantt_chart(results, time_scale, language)
+fig = plot_gantt_chart(results, time_scale=7, language)
 st.pyplot(fig)
 
 # Summary
