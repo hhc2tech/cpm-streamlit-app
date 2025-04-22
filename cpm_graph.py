@@ -6,23 +6,23 @@ def plot_gantt_chart(results, time_scale=7, language="English"):
     plt.title("Gantt Chart with Critical Path", fontsize=14)
     # Format x-axis ticks
     if time_scale == 1:
-        major_locator = mdates.MonthLocator()
-        minor_locator = mdates.DayLocator(interval=1)
-        minor_fmt = mdates.DateFormatter("%d")
+        minor_locator = mdates.MonthLocator()
+        major_locator = mdates.DayLocator(interval=1)
+        major_fmt = mdates.DateFormatter("%d")
     elif time_scale == 7:
-        major_locator = mdates.MonthLocator()
-        minor_locator = mdates.DayLocator(interval=7)
+        minor_locator = mdates.MonthLocator()
+        major_locator = mdates.DayLocator(interval=7)
         minor_fmt = mdates.DateFormatter("%d")
     else:
-        major_locator = mdates.MonthLocator()
-        minor_locator = mdates.DayLocator(interval=15)
-        minor_fmt = mdates.DateFormatter("%d")
+        minor_locator = mdates.MonthLocator()
+        major_locator = mdates.DayLocator(interval=15)
+        major_fmt = mdates.DateFormatter("%d")
 
     if language == "Tiếng Việt":
-        major_fmt = mdates.DateFormatter("Tháng %m")
+        minor_fmt = mdates.DateFormatter("Tháng %m")
         plt.title("Biểu đồ đường Gantt", fontsize=14)
     else:
-        major_fmt = mdates.DateFormatter("%b")
+        minor_fmt = mdates.DateFormatter("%b")
 
     for i, row in results.iterrows():
         start = row['Start']
