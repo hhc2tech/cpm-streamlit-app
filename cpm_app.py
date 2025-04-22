@@ -8,6 +8,7 @@ import networkx as nx
 from datetime import timedelta
 from fpdf import FPDF
 import tempfile
+import os
 
 st.set_page_config(page_title="CPM Scheduler", layout="wide")
 st.title("📊 Critical Path Method (CPM) Scheduler")
@@ -21,16 +22,27 @@ This app allows you to:
 5. View the Network Diagram.
 """)
 
-# Sample data from CSV
-@st.cache_data
-def get_sample_data():
-    df = pd.read_csv("investopedia_project_schedule.csv")
+# Sample data from uploaded or default CSV
+def get_schedule():
+    uploaded_file = st.file_uploader("📂 Upload CSV Schedule File", type="csv")
+    if uploaded_file:
+        df = pd.read_csv(uploaded_file)
+    elif os.path.exists("investopedia_project_schedule.csv"):
+        df = pd.read_csv("investopedia_project_schedule.csv")
+    else:
+        df = pd.DataFrame({
+            "Activity ID": ["A"],
+            "Activity Name": ["Sample Task"],
+            "Duration": [5],
+            "Predecessors": [""],
+            "Start Date": ["2023-04-01"]
+        })
     if 'Start Date' not in df.columns:
-        df['Start Date'] = '2023-04-01'
+        df['Start Date'] = '2025-04-01'
     return df
 
 st.subheader("📝 Input Schedule Data")
-data = st.data_editor(get_sample_data(), num_rows="dynamic", use_container_width=True)
+data = st.data_editor(get_schedule(), num_rows="dynamic", use_container_width=True)
 
 # Graph construction
 graph = nx.DiGraph()
@@ -83,7 +95,6 @@ start_date = pd.to_datetime("2023-04-01")
 
 for i, row in results.iterrows():
     start = start_date + timedelta(days=row['ES'])
-    end = start + timedelta(days=row['Duration'])
     color = 'red' if row['Critical'] else 'steelblue'
     ax.barh(row['ID'] + ' - ' + row['Name'], row['Duration'], left=start, height=0.5, color=color, edgecolor='black')
     ax.text(start + timedelta(days=0.1), i, row['ID'], va='center', ha='left', color='white', fontsize=8)
@@ -104,8 +115,6 @@ st.subheader("📌 Network Diagram")
 fig2, ax2 = plt.subplots(figsize=(14, 8))
 pos = nx.spring_layout(graph, seed=42)
 nx.draw(graph, pos, with_labels=True, node_color='skyblue', node_size=2000, font_size=10, font_weight='bold', ax=ax2)
-labels = nx.get_edge_attributes(graph, 'label')
-nx.draw_networkx_edge_labels(graph, pos, edge_labels=labels, ax=ax2)
 st.pyplot(fig2)
 
 # PDF Export
