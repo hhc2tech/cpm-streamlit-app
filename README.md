@@ -1,2 +1,2 @@
 # cpm-streamlit-app
-cpm construction planning 
+Critical Path Method of Planning and Scheduling
